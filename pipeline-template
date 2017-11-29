@@ -11,9 +11,9 @@ objects:
   apiVersion: v1
   metadata:
     labels:
-      app: cicd-pipeline
-      name: cicd-pipeline
-    name: cicd-pipeline
+      app: jenkins-pipeline
+      name: jenkins-pipeline
+    name: pipeline
     annotations:
       pipeline.alpha.openshift.io/uses: '[{"name": "jenkins", "namespace": "", "kind": "DeploymentConfig"}]'
   spec:
@@ -28,20 +28,32 @@ objects:
     source:
       type: Git
       git:
-        uri: 'http://gogs:3000/gogs/application.git'
+        uri: ${GIT_REPO}
         ref: master
     strategy:
       type: JenkinsPipeline
       jenkinsPipelineStrategy:
         jenkinsfilePath: Jenkinsfile
         env:
-        - name: "TEST_PROJECT_PARAM"
-          value: "${TEST_PROJECT}"
-        - name: "PROD_PROJECT_PARAM"
-          value: "${PROD_PROJECT}"
+        - name: "MAVEN_MIRROR"
+          value: "${MAVEN_MIRROR_URL}"
     output: {}
     resources: {}
     postCommit: {}
     nodeSelector: {}
   status:
     lastVersion: 1
+parameters:
+- description: Url to the maven mirror.
+  displayName: Maven mirror url
+  name: MAVEN_MIRROR_URL
+- description: Git repository to install into Gogs. It should contain a Jenkinsfile at the root.
+  displayName: Git source repository
+  value: https://github.com/jbrannst/appdev-foundations-kitchensink.git
+  name: GIT_REPO
+  required: true
+- description: Webhook secret
+  from: '[a-zA-Z0-9]{8}'
+  generate: expression
+  name: WEBHOOK_SECRET
+  required: true
